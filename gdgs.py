@@ -123,6 +123,7 @@ class GDGS_Chatbot: # Generic Deep Generative System - Chatbot
 		self.words = {}
 		self.channels = {}
 		self.channel_delete_timeout = 60*10
+		self.talking_model = 1 # 0=This model first uses the input data to generate a response and then uses the data of the last word used for subsequent words (Self-Continuation Context Model). 1=This model first uses the input data to generate answers, then combines the data of the last word used with the input data and uses the average for the next words (Medium Context Model). 2=This model first uses the input data to generate the entire response (Absolute Context Model) 3=A single context model using average data of all past messages and words ever used (Whole Context Model)
 	def save(self):
 		return {"brain": self.brain.save(), "words": self.words, "channels": self.channels, "channel_delete_timeout": self.channel_delete_timeout}
 	def load(self, data):
@@ -139,6 +140,11 @@ class GDGS_Chatbot: # Generic Deep Generative System - Chatbot
 	def channels_still(self, ch):
 		self.channels[ch]["last"] = time.time()
 	def complation(self, text, truevalue=4.5, train=True, maxing=9, temperature=0.4, maxwords=15, context=[], channel=None, channelsave=True):
+		wholevalues = []
+		for h in context:
+			h = value_of_text(h)
+			h = self.brain.process(h, truevalue=truevalue, train=False, maxing=maxing)
+			wholevalues.append(h)
 		if channel != None:
 			if channel not in self.channels:
 				self.channels[channel] = {"messages": [], "last": time.time()}
@@ -161,6 +167,8 @@ class GDGS_Chatbot: # Generic Deep Generative System - Chatbot
 				self.words[word] = value
 		text_value = value_of_text(text)
 		text_value = self.brain.process(text_value, truevalue=truevalue, train=train, maxing=maxing)
+		main_text_value = text_value
+		wholevalues.append(main_text_value)
 		try:
 			max_wording = 1+(int((text_value*1000000)**2)%(maxwords-1))
 		except:
@@ -180,13 +188,28 @@ class GDGS_Chatbot: # Generic Deep Generative System - Chatbot
 					most = word
 			if len(targets) == 0:
 				targets.append(most)
-			result.append(targets[int(nseed)%len(targets)])
+			targetword = targets[int(nseed)%len(targets)]
+			if self.talking_model == 0:
+				text_value = value_of_text(targetword)
+				text_value = self.brain.process(text_value, truevalue=truevalue, train=train, maxing=maxing)
+			elif self.talking_model == 1:
+				text_value = value_of_text(targetword)
+				text_value = self.brain.process(text_value, truevalue=truevalue, train=train, maxing=maxing)
+				text_value = (main_text_value+text_value)/2
+			elif self.talking_model == 2:
+				text_value = main_text_value
+			elif self.talking_model == 3:
+				h = value_of_text(targetword)
+				h = self.brain.process(h, truevalue=truevalue, train=False, maxing=maxing)
+				wholevalues.append(h)
+				text_value = sum(wholevalues)/len(wholevalues)
+			result.append(targetword)
 			nseed += (nseed%30)+1
 		if channelsave:
 			if channel != None:
 				self.channels[channel]["messages"].append(" ".join(result))
 		return " ".join(result)
-	def train_with_chat(self, chat, maxing=9, temperature=0.4, maxwords=15):
+	def train_with_chat(self, chat, maxing=9, temperature=0.4, maxwords=15, context=[], channel=None, channelsave=True):
 		messages = []
 		talkings = []
 		for n, message in enumerate(chat):
@@ -195,5 +218,5 @@ class GDGS_Chatbot: # Generic Deep Generative System - Chatbot
 			except:
 				next_message = message
 			value_mn = value_of_text(next_message)
-			talkings.append(self.complation(message, truevalue=value_mn*9, maxing=maxing, temperature=temperature, maxwords=maxwords, train=True))
+			talkings.append(self.complation(message, truevalue=value_mn*9, maxing=maxing, temperature=temperature, maxwords=maxwords, train=True, context=context, channel=channel, channelsave=channelsave))
 		return " ".join(talkings)
