@@ -195,7 +195,7 @@ class GDGS_Chatbot: # Generic Deep Generative System - Chatbot
 			elif self.talking_model == 1:
 				text_value = value_of_text(targetword)
 				text_value = self.brain.process(text_value, truevalue=truevalue, train=train, maxing=maxing)
-				text_value = (main_text_value+text_value)/2
+				text_value = (main_text_value+text_value+text_value)/3
 			elif self.talking_model == 2:
 				text_value = main_text_value
 			elif self.talking_model == 3:
