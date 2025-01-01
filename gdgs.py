@@ -1,4 +1,5 @@
 import random, time, json
+from collections import Counter
 class GDGS_Neuron: # Generic Deep Generative System - Neuron
 	def __init__(self, age=1):
 		self.weight = random.random()*9
