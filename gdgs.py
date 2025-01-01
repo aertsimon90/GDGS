@@ -124,7 +124,7 @@ class GDGS_Chatbot: # Generic Deep Generative System - Chatbot
 		self.words = {}
 		self.channels = {}
 		self.channel_delete_timeout = 60*10
-		self.talking_model = 1 # 0=This model first uses the input data to generate a response and then uses the data of the last word used for subsequent words (Self-Continuation Context Model). 1=This model first uses the input data to generate answers, then combines the data of the last word used with the input data and uses the average for the next words (Medium Context Model). 2=This model first uses the input data to generate the entire response (Absolute Context Model) 3=A single context model using average data of all past messages and words ever used (Whole Context Model)
+		self.talking_model = 2 # 0=This model first uses the input data to generate a response and then uses the data of the last word used for subsequent words (Self-Continuation Context Model). 1=This model first uses the input data to generate answers, then combines the data of the last word used with the input data and uses the average for the next words (Medium Context Model). 2=This model first uses the input data to generate the entire response (Absolute Context Model) 3=A single context model using average data of all past messages and words ever used (Whole Context Model)
 	def save(self):
 		return {"brain": self.brain.save(), "words": self.words, "channels": self.channels, "channel_delete_timeout": self.channel_delete_timeout}
 	def load(self, data):
